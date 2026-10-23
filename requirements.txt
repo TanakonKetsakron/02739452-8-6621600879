@@ -1,0 +1,10 @@
+apache-airflow-providers-postgres
+requests
+beautifulsoup4
+lxml
+curl_cffi
+psycopg2-binary
+pandas
+sqlalchemy
+streamlit
+plotly

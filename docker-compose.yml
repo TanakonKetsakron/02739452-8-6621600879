@@ -9,6 +9,7 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_AIRFLOW_DB}
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
     AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY:-}
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
     AIRFLOW_CONN_CARS_DB: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_CARS_DB}
@@ -43,10 +44,15 @@ services:
 
   airflow-init:
     <<: *airflow-common
+    # runs as root so it can fix ownership of the bind mounts (Docker creates logs/ and data/
+    # as root on Linux); the metadata DB lives in Postgres so root-owned files are not an issue
+    user: "0:0"
     command:
       - bash
       - -c
       - >
+        mkdir -p /opt/airflow/logs /opt/airflow/data &&
+        chown -R "${AIRFLOW_UID:-50000}:0" /opt/airflow/logs /opt/airflow/data &&
         airflow db migrate &&
         airflow users create --username "${AIRFLOW_ADMIN_USER}" --password "${AIRFLOW_ADMIN_PASSWORD}"
         --firstname Admin --lastname User --role Admin --email admin@example.com || true

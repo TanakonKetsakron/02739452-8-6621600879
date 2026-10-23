@@ -121,7 +121,7 @@ def parse_detail(html: str) -> dict:
     if m:
         out["transmission"] = {"ออโต้": "Automatic", "ธรรมดา": "Manual"}.get(m.group(1), m.group(1))
     # "ทะเบียน <plate> <province>" - plate deliberately discarded
-    m = re.search(r"ทะเบียน\s+\S+\s+([ก-๙\.]+)", text)
+    m = re.search(r"ทะเบียน\s+\S*\d\S*\s+([ก-๙\.]+)\s*\|", text)
     if m:
         out["province"] = m.group(1)
     return out
